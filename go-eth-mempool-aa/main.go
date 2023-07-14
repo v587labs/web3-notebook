@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
@@ -21,6 +22,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	_ "embed"
 )
 
 const HandleOpsSign = "1fad948c"
@@ -29,22 +32,24 @@ var wsRpcVar = "wss://localhost:8080"
 var originVar = ""
 var privateKeyVar = ""
 
+//go:embed abi.json
+var abiJsonString []byte
 var jsonABI abi.ABI
+var gasVar uint64 = 10
+var gasPriceVar uint64 = 10
 
 func init() {
 	flag.StringVar(&wsRpcVar, "ws", wsRpcVar, "-ws "+wsRpcVar)
 	flag.StringVar(&originVar, "origin", originVar, "-origin "+originVar)
 	flag.StringVar(&privateKeyVar, "key", privateKeyVar, "-key "+privateKeyVar)
+	flag.Uint64Var(&gasVar, "gas", gasVar, fmt.Sprintf("-gas %d", gasVar))
+	flag.Uint64Var(&gasPriceVar, "price", gasPriceVar, fmt.Sprintf("-price %d", gasPriceVar))
 	log.Root().SetHandler(
 		log.LvlFilterHandler(log.LvlDebug, log.StdoutHandler),
 	)
-	f, err := os.Open("./abi.json")
-	if err != nil {
-		log.Error("read abi error")
-		return
-	}
-	jsonABI, _ = abi.JSON(f)
-	f.Close()
+
+	jsonABI, _ = abi.JSON(bytes.NewReader(abiJsonString))
+
 }
 
 var pendingTransactions chan common.Hash
@@ -150,7 +155,7 @@ func _readPendingTransaction(ws *rpc.Client) {
 				}
 
 				gasPrice := transaction.GasPrice()
-				gasPrice = gasPrice.Add(gasPrice, big.NewInt(1))
+				gasPrice = gasPrice.Add(gasPrice, big.NewInt(int64(gasPriceVar)))
 
 				unpack[1] = fromAddress
 				fmt.Println(unpack)
@@ -167,8 +172,8 @@ func _readPendingTransaction(ws *rpc.Client) {
 				}
 				tx := &types.LegacyTx{
 					Nonce:    nonce,
-					GasPrice: transaction.GasPrice(),
-					Gas:      transaction.Gas() + 10,
+					GasPrice: gasPrice,
+					Gas:      transaction.Gas() + gasVar,
 					To:       transaction.To(),
 					Value:    big.NewInt(0),
 					Data:     append(method.ID, dataPack...),
