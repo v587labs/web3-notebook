@@ -133,15 +133,12 @@ func _readPendingTransaction(ws *rpc.Client) {
 			continue
 		}
 
+		log.Debug("find transaction", "hash", tx.Hex())
 		data := transaction.Data()
 		if len(data) > 4 {
 			head := strings.ToLower(hex.EncodeToString(data[:4]))
 			if head == HandleOpsSign {
 
-				fmt.Println(head, tx, head == HandleOpsSign)
-				//fmt.Println(hex.EncodeToString(transaction.Data()), isPending)
-
-				// recover Method from signature and ABI
 				method, err := jsonABI.MethodById(data[0:4])
 				if err != nil {
 					log.Error("method error", "err", err)
@@ -158,7 +155,7 @@ func _readPendingTransaction(ws *rpc.Client) {
 				gasPrice = gasPrice.Add(gasPrice, big.NewInt(int64(gasPriceVar)))
 
 				unpack[1] = fromAddress
-				fmt.Println(unpack)
+				//fmt.Println(unpack)
 				dataPack, err := method.Inputs.Pack(unpack...)
 				if err != nil {
 					log.Error("pack error", "err", err)
