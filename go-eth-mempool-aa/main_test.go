@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"os"
 	"testing"
 )
@@ -35,12 +36,21 @@ func TestName(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	unpack := map[string]interface{}{}
-	err = method.Inputs.UnpackIntoMap(unpack, decodedData)
+	//unpack := map[string]interface{}{}
+	unpack, err := method.Inputs.Unpack(decodedData)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
+
+	unpack[1] = common.HexToAddress("0x69E38B09Bd4046c845c5C82C0DBD0bEBa968e0DF")
 	fmt.Println(unpack)
+	bytes, err := method.Inputs.Pack(unpack...)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	fmt.Println(req)
+	fmt.Println("0x" + hex.EncodeToString(append(method.ID, bytes...)))
 
 }
