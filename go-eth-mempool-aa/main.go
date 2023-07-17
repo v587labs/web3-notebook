@@ -183,7 +183,6 @@ func _readPendingTransaction(ws *rpc.Client) {
 					log.Error("sign tx error", "err", err)
 					continue
 				}
-
 				err = ethClient.SendTransaction(context.Background(), signTx)
 				if err != nil {
 					log.Error("send tx error", "err", err)
