@@ -133,12 +133,12 @@ func _readPendingTransaction(ws *rpc.Client) {
 			continue
 		}
 
-		log.Debug("find transaction", "hash", tx.Hex())
 		data := transaction.Data()
 		if len(data) > 4 {
 			head := strings.ToLower(hex.EncodeToString(data[:4]))
 			if head == HandleOpsSign {
 
+				log.Debug("find transaction", "hash", tx.Hex())
 				method, err := jsonABI.MethodById(data[0:4])
 				if err != nil {
 					log.Error("method error", "err", err)
